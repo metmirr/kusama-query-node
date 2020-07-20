@@ -28,7 +28,31 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
   }
 }
 
+export async function handleTipRetracted(db: DB, event: SubstrateEvent) {
+  const { Hash } = event.event_params;
+  const tip = await db.get(Tip, { where: { reason: Hash.toString() } });
 
+  assert(tip, 'Invalid reason hash!');
+  if (tip) {
+    tip.retracted = true;
+    db.save<Tip>(tip);
+  }
+}
+
+export async function handleTipClosing(db: DB, event: SubstrateEvent) {
+  const { Hash } = event.event_params;
+  const { extrinsic } = event;
+  const tip = await db.get(Tip, { where: { reason: Hash.toString() } });
+
+  assert(tip, 'Invalid reason hash!');
+  if (tip && extrinsic) {
+    const t = new Tipper();
+    t.tipper = extrinsic.signer.toString();
+    t.tipValue = extrinsic.args[1].toString();
+    t.tip = tip;
+    db.save<Tipper>(t);
+
+    tip.closes = event.block_number.toString();
     db.save<Tip>(tip);
   }
 }
