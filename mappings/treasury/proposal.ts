@@ -11,8 +11,8 @@ export async function handleProposed(db: DB, event: SubstrateEvent) {
     proposal.proposalIndex = ProposalIndex.toString();
     proposal.value = event.extrinsic?.args[0].toString();
     proposal.bond = event.extrinsic?.args[0].toString();
-    proposal.beneficiary = Buffer.from(event.extrinsic?.args[1]);
-    proposal.proposer = Buffer.from(event.extrinsic?.signer.toU8a);
+    proposal.beneficiary = Buffer.from(event.extrinsic?.args[1].toString());
+    proposal.proposer = Buffer.from(event.extrinsic?.signer.toString());
     proposal.status = ProposalStatus.NONE;
 
     await db.save<Proposal>(proposal);

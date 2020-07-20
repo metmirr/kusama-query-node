@@ -9,10 +9,10 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
 
   if (extrinsic) {
     const tip = new Tip();
-    tip.reason = Buffer.from(Hash);
+    tip.reason = Buffer.from(Hash.toString());
     tip.who = Buffer.from(extrinsic.args[1]);
     tip.retracted = false;
-    tip.finder = Buffer.from(extrinsic?.signer);
+    tip.finder = Buffer.from(extrinsic?.signer.toString());
     // check runtime function name that emit the event
     tip.findersFee = extrinsic.meta.name.toString() === 'report_awesome';
     db.save<Tip>(tip);
@@ -22,7 +22,7 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
       //Give a tip for something new; no finder's fee will be taken.
       const t = new Tipper();
       t.tipValue = extrinsic.args[2].toString();
-      t.tipper = Buffer.from(extrinsic?.signer);
+      t.tipper = Buffer.from(extrinsic?.signer.toString());
       t.tip = tip;
       db.save<Tipper>(t);
     }
@@ -31,7 +31,7 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
 
 export async function handleTipRetracted(db: DB, event: SubstrateEvent) {
   const { Hash } = event.event_params;
-  const tip = await db.get(Tip, { where: { reason: Hash.toString() } });
+  const tip = await db.get(Tip, { where: { reason: Buffer.from(Hash.toString()) } });
 
   assert(tip, 'Invalid reason hash!');
   if (tip) {
@@ -44,12 +44,12 @@ export async function handleTipRetracted(db: DB, event: SubstrateEvent) {
 export async function handleTipClosing(db: DB, event: SubstrateEvent) {
   const { Hash } = event.event_params;
   const { extrinsic } = event;
-  const tip = await db.get(Tip, { where: { reason: Hash.toString() } });
+  const tip = await db.get(Tip, { where: { reason: Buffer.from(Hash.toString()) } });
 
   assert(tip, 'Invalid reason hash!');
   if (tip && extrinsic) {
     const t = new Tipper();
-    t.tipper = Buffer.from(extrinsic?.signer);
+    t.tipper = Buffer.from(extrinsic?.signer.toString());
     t.tipValue = extrinsic.args[1].toString();
     t.tip = tip;
     db.save<Tipper>(t);
@@ -61,13 +61,13 @@ export async function handleTipClosing(db: DB, event: SubstrateEvent) {
 
 // A tip suggestion has reached threshold and is closing.
 export async function handleTipClosed(db: DB, event: SubstrateEvent) {
-  const { Hash, AccountId, Balance } = event.event_params;
+  const { Hash, AccountId } = event.event_params;
   const { extrinsic } = event;
-  const tip = await db.get(Tip, { where: { reason: Hash.toString() } });
+  const tip = await db.get(Tip, { where: { reason: Buffer.from(Hash.toString()) } });
 
   assert(tip, 'Invalid reason hash!');
 
   if (tip && extrinsic) {
-    tip.who = Buffer.from(AccountId);
+    tip.who = Buffer.from(AccountId.toString());
   }
 }
