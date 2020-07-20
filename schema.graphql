@@ -13,6 +13,10 @@ type Proposal @entity {
   bond: BigDecimal!
 
   proposalIndex: BigDecimal! @unique
+
+  rejected: Boolean!
+
+  approved: Boolean!
 }
 
 type Member @entity {
