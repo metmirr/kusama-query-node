@@ -9,10 +9,11 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
 
   if (extrinsic) {
     const tip = new Tip();
-    tip.reason = Hash.toString();
-    tip.who = extrinsic.args[1].toString();
+    tip.reason = Buffer.from(Hash);
+    tip.who = Buffer.from(extrinsic.args[1]);
     tip.retracted = false;
-    tip.finder = extrinsic?.signer.toString();
+    tip.finder = Buffer.from(extrinsic?.signer);
+    // check runtime function name that emit the event
     tip.findersFee = extrinsic.meta.name.toString() === 'report_awesome';
     db.save<Tip>(tip);
 
@@ -21,7 +22,7 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
       //Give a tip for something new; no finder's fee will be taken.
       const t = new Tipper();
       t.tipValue = extrinsic.args[2].toString();
-      t.tipper = extrinsic?.signer.toString();
+      t.tipper = Buffer.from(extrinsic?.signer);
       t.tip = tip;
       db.save<Tipper>(t);
     }
@@ -39,6 +40,7 @@ export async function handleTipRetracted(db: DB, event: SubstrateEvent) {
   }
 }
 
+// A tip suggestion has reached threshold and is closing.
 export async function handleTipClosing(db: DB, event: SubstrateEvent) {
   const { Hash } = event.event_params;
   const { extrinsic } = event;
@@ -47,12 +49,25 @@ export async function handleTipClosing(db: DB, event: SubstrateEvent) {
   assert(tip, 'Invalid reason hash!');
   if (tip && extrinsic) {
     const t = new Tipper();
-    t.tipper = extrinsic.signer.toString();
+    t.tipper = Buffer.from(extrinsic?.signer);
     t.tipValue = extrinsic.args[1].toString();
     t.tip = tip;
     db.save<Tipper>(t);
 
     tip.closes = event.block_number.toString();
     db.save<Tip>(tip);
+  }
+}
+
+// A tip suggestion has reached threshold and is closing.
+export async function handleTipClosed(db: DB, event: SubstrateEvent) {
+  const { Hash, AccountId, Balance } = event.event_params;
+  const { extrinsic } = event;
+  const tip = await db.get(Tip, { where: { reason: Hash.toString() } });
+
+  assert(tip, 'Invalid reason hash!');
+
+  if (tip && extrinsic) {
+    tip.who = Buffer.from(AccountId);
   }
 }
