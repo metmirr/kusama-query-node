@@ -1,1 +1,1 @@
-export * from './treasury'
+export * from './treasury';
