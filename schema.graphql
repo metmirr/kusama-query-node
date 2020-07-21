@@ -41,7 +41,7 @@ type Tip @entity {
   finder: Bytes!
 
   "The amount held on deposit for this tip."
-  deposit: BigInt!
+  deposit: BigInt
 
   "The block number at which this tip will close if Some."
   closes: BigInt

@@ -13,12 +13,15 @@ export async function handleNewTip(db: DB, event: SubstrateEvent) {
     tip.who = Buffer.from(extrinsic.args[1]);
     tip.retracted = false;
     tip.finder = Buffer.from(extrinsic?.signer.toString());
+
+    const runtimeFuncName = extrinsic.meta.name.toString();
     // check runtime function name that emit the event
-    tip.findersFee = extrinsic.meta.name.toString() === 'report_awesome';
+    tip.findersFee = runtimeFuncName === 'report_awesome';
+
     db.save<Tip>(tip);
 
     // NewTip event can be fired from different runtime functions
-    if (extrinsic.meta.name.toString() !== 'report_awesome') {
+    if (runtimeFuncName !== 'report_awesome') {
       //Give a tip for something new; no finder's fee will be taken.
       const t = new Tipper();
       t.tipValue = extrinsic.args[2].toString();
