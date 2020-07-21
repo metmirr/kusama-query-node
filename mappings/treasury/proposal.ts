@@ -22,7 +22,7 @@ export async function handleProposed(db: DB, event: SubstrateEvent) {
 // A proposal was rejected
 export async function handleRejected(db: DB, event: SubstrateEvent) {
   const { ProposalIndex } = event.event_params;
-  const proposal = await db.get(Proposal, { where: { proposalIndex: ProposalIndex } });
+  const proposal = await db.get(Proposal, { where: { proposalIndex: ProposalIndex.toString() } });
 
   assert(proposal, 'Proposal not found! Invalid proposal id');
 
@@ -35,7 +35,7 @@ export async function handleRejected(db: DB, event: SubstrateEvent) {
 // A proposal is approved! Some funds have been allocated.
 export async function handleAwarded(db: DB, event: SubstrateEvent) {
   const { ProposalIndex } = event.event_params;
-  const proposal = await db.get(Proposal, { where: { proposalIndex: ProposalIndex } });
+  const proposal = await db.get(Proposal, { where: { proposalIndex: ProposalIndex.toString() } });
 
   assert(proposal, 'Proposal not found! Invalid proposal id');
 
